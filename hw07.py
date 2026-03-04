@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import re
 
-# -------------------- КЛАСИ --------------------
+# КЛАСИ 
 
 class Field:
     pass
@@ -74,7 +74,7 @@ class AddressBook:
                     upcoming.append((record.name.value, next_birthday))
         return upcoming
 
-# -------------------- ДЕКОРАТОР --------------------
+# ДЕКОРАТОР 
 
 def input_error(func):
     def wrapper(*args, **kwargs):
@@ -84,7 +84,7 @@ def input_error(func):
             return f"Error: {e}"
     return wrapper
 
-# -------------------- ФУНКЦІЇ-КОМАНДИ --------------------
+# ФУНКЦІЇ-КОМАНДИ
 
 @input_error
 def add_contact(args, book: AddressBook):
@@ -146,7 +146,7 @@ def parse_input(user_input):
     parts = user_input.strip().split()
     return parts[0], parts[1:]
 
-# -------------------- ГОЛОВНА ФУНКЦІЯ --------------------
+# ГОЛОВНА ФУНКЦІЯ
 
 def main():
     book = AddressBook()
