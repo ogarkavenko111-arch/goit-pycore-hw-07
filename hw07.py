@@ -1,20 +1,39 @@
 from datetime import datetime, timedelta
 import re
 
-# КЛАСИ 
+#  КЛАСИ 
 
 class Field:
     pass
 
 class Name(Field):
     def __init__(self, value):
-        self.value = value
+        self.value = value  
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, val):
+        val = val.strip()
+        if not val:
+            raise ValueError("Name cannot be empty")
+        self._value = val
 
 class Phone(Field):
     def __init__(self, value):
-        if not re.fullmatch(r"\d{10}", value):
+        self.value = value  # викликає setter
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, val):
+        if not re.fullmatch(r"\d{10}", val):
             raise ValueError("Phone must consist of 10 digits")
-        self.value = value
+        self._value = val
 
 class Birthday(Field):
     def __init__(self, value):
@@ -22,6 +41,8 @@ class Birthday(Field):
             self.value = datetime.strptime(value, "%d.%m.%Y").date()
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
+
+# RECORD
 
 class Record:
     def __init__(self, name):
@@ -50,6 +71,8 @@ class Record:
         if next_birthday < today:
             next_birthday = next_birthday.replace(year=today.year + 1)
         return (next_birthday - today).days
+
+# ADDRESS BOOK 
 
 class AddressBook:
     def __init__(self):
@@ -82,9 +105,11 @@ def input_error(func):
             return func(*args, **kwargs)
         except (ValueError, IndexError) as e:
             return f"Error: {e}"
+        except Exception as e:
+            return f"Unexpected error: {e}"
     return wrapper
 
-# ФУНКЦІЇ-КОМАНДИ
+# ФУНКЦІЇ-КОМАНДИ 
 
 @input_error
 def add_contact(args, book: AddressBook):
@@ -146,39 +171,34 @@ def parse_input(user_input):
     parts = user_input.strip().split()
     return parts[0], parts[1:]
 
-# ГОЛОВНА ФУНКЦІЯ
+# ГОЛОВНА ФУНКЦІЯ 
 
 def main():
     book = AddressBook()
     print("Welcome to the assistant bot!")
+
+    commands = {
+        "hello": lambda args: print("How can I help you?"),
+        "add": lambda args: print(add_contact(args, book)),
+        "change": lambda args: print(change_contact(args, book)),
+        "phone": lambda args: print(show_phone(args, book)),
+        "all": lambda args: [
+            print(f"{rec.name.value}: Phones: {', '.join(p.value for p in rec.phones)}, "
+                  f"Birthday: {rec.birthday.value.strftime('%d.%m.%Y') if rec.birthday else 'Not set'}")
+            for rec in book.records.values()
+        ],
+        "add-birthday": lambda args: print(add_birthday(args, book)),
+        "show-birthday": lambda args: print(show_birthday(args, book)),
+        "birthdays": lambda args: print(birthdays(args, book)),
+        "exit": lambda args: exit(print("Good bye!")),
+        "close": lambda args: exit(print("Good bye!"))
+    }
+
     while True:
         user_input = input("Enter a command: ")
         command, args = parse_input(user_input)
+        commands.get(command, lambda args: print("Invalid command."))(args)
 
-        if command in ["close", "exit"]:
-            print("Good bye!")
-            break
-        elif command == "hello":
-            print("How can I help you?")
-        elif command == "add":
-            print(add_contact(args, book))
-        elif command == "change":
-            print(change_contact(args, book))
-        elif command == "phone":
-            print(show_phone(args, book))
-        elif command == "all":
-            for rec in book.records.values():
-                phones = ", ".join(p.value for p in rec.phones)
-                bday = rec.birthday.value.strftime("%d.%m.%Y") if rec.birthday else "Not set"
-                print(f"{rec.name.value}: Phones: {phones}, Birthday: {bday}")
-        elif command == "add-birthday":
-            print(add_birthday(args, book))
-        elif command == "show-birthday":
-            print(show_birthday(args, book))
-        elif command == "birthdays":
-            print(birthdays(args, book))
-        else:
-            print("Invalid command.")
 
 if __name__ == "__main__":
     main()
